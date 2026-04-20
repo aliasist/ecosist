@@ -1,4 +1,4 @@
-name = "ecosist"
+name = "ecosist-app"
 main = "worker/index.ts"
 compatibility_date = "2026-04-07"
 
