@@ -1,10 +1,11 @@
 import weatherWorker from "./weather";
+import type { RuntimeEnv } from "./types";
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request: Request, env: RuntimeEnv): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/api/weather")) {
-      return weatherWorker.fetch(request, env, ctx);
+      return weatherWorker.fetch(request, env);
     }
     // Fallback: serve static assets (for iframe SPA)
     if (env.ASSETS) {

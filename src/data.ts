@@ -2,15 +2,15 @@ import type { SiteConfig } from "./types";
 
 export const siteConfig: SiteConfig = {
   productName: "EcoSist",
-  tagline: "Environmental intelligence built around Electricity Maps.",
+  tagline: "API-first environmental intelligence for data teams and AI workflows.",
   description:
-    "A configurable environmental platform for reading grid emissions in context with climate, earth systems, biology, and ecosystem health data.",
+    "A professional data platform for combining energy, climate, hazard, and biodiversity signals into one API-ready interface for products, dashboards, and agents.",
   heroPanel: {
-    title: "Scaling posture",
+    title: "Platform posture",
     bullets: [
-      "Electricity Maps is the primary live energy layer.",
-      "Earth and biology feeds add ecological context.",
-      "The page is driven from a central site configuration object.",
+      "API responses are structured for dashboards, internal tools, and agent workflows.",
+      "Live energy, climate, hazard, and biology feeds stay aligned in one surface.",
+      "The interface is config-driven so new regions and modules can be added without layout rewrites.",
     ],
   },
   defaultCoordinates: {
@@ -50,44 +50,44 @@ export const siteConfig: SiteConfig = {
   operationsSection: {
     id: "operations",
     eyebrow: "Operations",
-    title: "Live system and provider readiness",
+    title: "API health, system readiness, and live environmental reads",
     description:
-      "This section reads from the Worker API so the frontend can reflect provider health, key configuration, and live environment snapshots.",
+      "The operations surface reads directly from the Worker API so the frontend reflects provider health, key configuration, and current environmental conditions.",
   },
   metricsSection: {
     id: "metrics",
     eyebrow: "Snapshot",
-    title: "Example metrics for the first dashboard pass",
+    title: "Signal framing for product and AI context",
     description:
-      "These sample values are placeholders today, but the section contract is ready for live API-backed metrics later.",
+      "These values show how the platform can frame live environmental data for product, ops, and AI use cases.",
   },
   domainsSection: {
     id: "domains",
     eyebrow: "Coverage",
-    title: "Three core data domains",
+    title: "Three live API domains",
     description:
-      "Each domain is defined as structured content so new categories can be added without changing the rendering logic.",
+      "Each domain is structured content so coverage can expand without rewriting the rendering logic.",
   },
   workflowSection: {
     id: "workflow",
     eyebrow: "Pipeline",
-    title: "How the app should evolve from scaffold to live product",
+    title: "How the app evolves from shell to platform",
     description:
-      "The workflow cards map directly to the backend and data-normalization work that comes next.",
+      "The workflow cards map directly to backend normalization, trust, and API consistency work.",
   },
   capabilitiesSection: {
     id: "capabilities",
     eyebrow: "Scaling",
-    title: "Customization points for growth",
+    title: "System extension points",
     description:
-      "The app is set up so branding, page sections, and future data modules can be extended through configuration instead of rewrites.",
+      "Branding, page structure, and future data modules are designed to grow through configuration rather than rewrites.",
   },
   sourcesSection: {
     id: "sources",
     eyebrow: "Attribution",
-    title: "Source handling",
+    title: "Source handling and provenance",
     description:
-      "Citations stay visible as the data surface area grows across power, climate, land, water, and biology.",
+      "Citations stay visible as the monitored surface area grows across power, climate, land, water, and biology.",
   },
   metrics: [
     {
@@ -209,12 +209,12 @@ export const siteConfig: SiteConfig = {
   ],
   theme: {
     pageBackground:
-      "radial-gradient(circle at top, rgba(55, 130, 95, 0.22), transparent 42%), linear-gradient(180deg, #0a1712 0%, #08120f 100%)",
-    cardBackground: "rgba(9, 26, 20, 0.82)",
-    cardBorder: "rgba(129, 187, 154, 0.18)",
-    accent: "#8fd6ac",
-    accentStrong: "#98e3b7",
-    textPrimary: "#e5f2ea",
-    textSecondary: "#c0d7cc",
+      "radial-gradient(circle at top, rgba(74, 114, 148, 0.2), transparent 38%), radial-gradient(circle at 80% 14%, rgba(123, 150, 170, 0.12), transparent 24%), linear-gradient(180deg, #081017 0%, #08120f 48%, #070d12 100%)",
+    cardBackground: "rgba(11, 18, 23, 0.82)",
+    cardBorder: "rgba(126, 150, 168, 0.2)",
+    accent: "#90c6d8",
+    accentStrong: "#d6e7ef",
+    textPrimary: "#e9eff2",
+    textSecondary: "#b8c7ce",
   },
 };

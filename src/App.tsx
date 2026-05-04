@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { Show, UserButton } from "@clerk/react";
 import type { CSSProperties } from "react";
 import ecosistSignalPortrait from "./assets/2811292-portrait-ai-and-overlay-with-a-digital-woman-in-studio-on-a-dark-background-for-3d-information-technology.-face-future-and-cyber-space-with-a-female-hologram-interface-as-a-dashboard-for-security-fit_400_400.jpg";
 import ecosistDashboardVisual from "./assets/still-77883d60a95842ddf684ee7ab2e12b10.png";
+import ecosistCinematicHero from "./assets/ecosist-cinematic-observatory-hero.png";
 import ecosistLogo from "./assets/ecosist-logo.svg";
-
-// Banner component for logo/banner design
-function Banner() {
-  return (
-    <div className="ecosist-banner">
-      {/* Replace this with your logo or custom banner design */}
-      <span className="ecosist-banner-logo">eCoSist <span className="ecosist-banner-by">by Aliasist</span></span>
-    </div>
-  );
-}
+import { hasClerkKey } from "./lib/clerk";
 import { siteConfig } from "./data";
 import type {
   CapabilityCard,
@@ -46,6 +39,39 @@ type ComparisonSnapshot = {
   data?: EnvironmentSnapshotResponse;
   error?: string;
 };
+
+type HeroTelemetryPoint = {
+  label: string;
+  value: string;
+  detail: string;
+  x: number;
+  y: number;
+  intensity: number;
+};
+
+function Banner({
+  region,
+  providerCount,
+  lastSync,
+}: {
+  region: string;
+  providerCount?: number;
+  lastSync?: string;
+}) {
+  return (
+    <div className="ecosist-banner" aria-label="Live command strip">
+      <span className="ecosist-banner-mark">EcoSist</span>
+      <span className="ecosist-banner-separator" />
+      <span>Data AI API console</span>
+      <span className="ecosist-banner-separator" />
+      <span>Region {region}</span>
+      <span className="ecosist-banner-separator" />
+      <span>{providerCount ?? 0} providers</span>
+      <span className="ecosist-banner-separator" />
+      <span>Last sync {lastSync ?? "Unavailable"}</span>
+    </div>
+  );
+}
 
 function formatCoordinateValue(value: number): string {
   return value.toFixed(4);
@@ -165,6 +191,81 @@ function LiveMetricCard({
       <p className="metric-value">{value}</p>
       <p className="metric-detail">{detail}</p>
     </article>
+  );
+}
+
+function HeroObservatory({
+  region,
+  lastSync,
+  telemetry,
+}: {
+  region: string;
+  lastSync: string;
+  telemetry: HeroTelemetryPoint[];
+}) {
+  const polyline = telemetry.map((point) => `${point.x},${point.y}`).join(" ");
+
+  return (
+    <section className="hero-observatory" aria-label="Observatory signal field">
+      <div className="hero-observatory-backdrop" />
+      <div className="hero-observatory-backdrop hero-observatory-backdrop-secondary" />
+      <div className="hero-observatory-grid" />
+      <div className="hero-observatory-scanline" />
+      <div className="hero-observatory-orbit hero-observatory-orbit-outer" />
+      <div className="hero-observatory-orbit hero-observatory-orbit-mid" />
+      <div className="hero-observatory-orbit hero-observatory-orbit-inner" />
+      <svg
+        className="hero-observatory-svg"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <polyline className="hero-observatory-polyline" points={polyline} />
+      </svg>
+      {telemetry.map((point, index) => (
+        <div
+          className="hero-node"
+          key={point.label}
+          style={
+            {
+              left: `${point.x}%`,
+              top: `${point.y}%`,
+              animationDelay: `${index * 220}ms`,
+            } as CSSProperties
+          }
+        >
+          <span
+            className="hero-node-pulse"
+            style={{ opacity: 0.35 + point.intensity * 0.6 } as CSSProperties}
+          />
+          <span className="hero-node-dot" />
+          <div className="hero-node-label">
+            <strong>{point.label}</strong>
+            <span>{point.value}</span>
+          </div>
+        </div>
+      ))}
+      <div className="hero-observatory-core">
+        <p className="eyebrow">Observatory</p>
+        <h3>{region}</h3>
+        <p className="hero-observatory-note">
+          Cross-domain environmental field built from energy, atmosphere, hazard, and ecology reads.
+        </p>
+        <div className="hero-observatory-meta">
+          <span>Live stack active</span>
+          <span>{lastSync}</span>
+        </div>
+      </div>
+      <div className="hero-telemetry-strip">
+        {telemetry.map((point) => (
+          <article className="hero-telemetry-card" key={`${point.label}-telemetry`}>
+            <p>{point.label}</p>
+            <strong>{point.value}</strong>
+            <span>{point.detail}</span>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -375,8 +476,46 @@ function RegionComparePanel({
   snapshots?: ComparisonSnapshot[];
   loading: boolean;
 }) {
+  const rankedSnapshots = [...(snapshots ?? [])]
+    .map((snapshot) => {
+      const carbon = snapshot.data?.electricityMaps?.carbonIntensityGCO2eqPerKWh;
+      const price = snapshot.data?.priceDayAhead?.price;
+      const air = snapshot.data?.earthSystems.snapshot?.usAqi;
+      const fire = snapshot.data?.wildfire.snapshot?.activeEventCount;
+      const species = snapshot.data?.biology.snapshot?.distinctSpeciesCount;
+      const carbonLevel = normalizeSignal(carbon, 600);
+      const priceLevel = normalizeSignal(price, 300);
+      const airLevel = normalizeSignal(air, 150);
+      const fireLevel = normalizeSignal(fire, 12);
+      const speciesLevel = normalizeSignal(species, 100);
+      const balanceScore = Math.round(
+        ((1 - carbonLevel) * 0.34 +
+          (1 - priceLevel) * 0.16 +
+          (1 - airLevel) * 0.18 +
+          (1 - fireLevel) * 0.14 +
+          speciesLevel * 0.18) *
+          100,
+      );
+
+      return {
+        ...snapshot,
+        carbon,
+        price,
+        air,
+        fire,
+        species,
+        carbonLevel,
+        priceLevel,
+        airLevel,
+        fireLevel,
+        speciesLevel,
+        balanceScore,
+      };
+    })
+    .sort((left, right) => right.balanceScore - left.balanceScore);
+
   return (
-    <section className="section" id="compare">
+    <section className="section reveal-block" data-reveal="rise" id="compare">
       <div className="section-heading">
         <p className="eyebrow">Compare</p>
         <h2>Regional signal comparison</h2>
@@ -386,29 +525,58 @@ function RegionComparePanel({
       </div>
       {loading ? <p className="section-description">Loading regional comparison...</p> : null}
       <div className="compare-grid">
-        {snapshots?.map(({ preset, data, error }) => {
-          const carbon = data?.electricityMaps?.carbonIntensityGCO2eqPerKWh;
-          const price = data?.priceDayAhead?.price;
-          const air = data?.earthSystems.snapshot?.usAqi;
-          const fire = data?.wildfire.snapshot?.activeEventCount;
-          const species = data?.biology.snapshot?.distinctSpeciesCount;
-          const carbonLevel = normalizeSignal(carbon, 600);
-          const airLevel = normalizeSignal(air, 150);
-          const fireLevel = normalizeSignal(fire, 12);
-          const speciesLevel = normalizeSignal(species, 100);
-
+        {rankedSnapshots.map(
+          (
+            {
+              preset,
+              data,
+              error,
+              carbon,
+              price,
+              air,
+              species,
+              carbonLevel,
+              priceLevel,
+              airLevel,
+              fireLevel,
+              speciesLevel,
+              balanceScore,
+            },
+            index,
+          ) => {
           return (
             <article className="compare-card" key={preset.label}>
               <div className="compare-card-header">
                 <div>
-                  <p className="eyebrow">Region</p>
+                  <p className="eyebrow">Region {String(index + 1).padStart(2, "0")}</p>
                   <h3>{preset.label}</h3>
                 </div>
-                <span className="trend-pill">
-                  {data?.electricityMaps?.zone ?? "No zone"}
-                </span>
+                <div className="compare-rank-cluster">
+                  <span className="compare-score">{balanceScore}</span>
+                  <span className="trend-pill">
+                    {data?.electricityMaps?.zone ?? "No zone"}
+                  </span>
+                </div>
               </div>
               {error ? <p className="warning-text">{error}</p> : null}
+              <div className="compare-hero-band">
+                <div className="compare-hero-band-copy">
+                  <span>Regional balance</span>
+                  <strong>
+                    {balanceScore >= 70
+                      ? "Favorable"
+                      : balanceScore >= 45
+                        ? "Mixed"
+                        : "Stressed"}
+                  </strong>
+                </div>
+                <div className="compare-hero-band-meter">
+                  <div
+                    className="compare-hero-band-fill"
+                    style={{ width: `${Math.max(balanceScore, 8)}%` }}
+                  />
+                </div>
+              </div>
               <div className="compare-values">
                 <div>
                   <span>Carbon</span>
@@ -427,9 +595,29 @@ function RegionComparePanel({
                   <strong>{species !== undefined ? String(species) : "Unavailable"}</strong>
                 </div>
               </div>
+              <div className="compare-signal-strip" aria-hidden="true">
+                {[
+                  { label: "Carbon", value: carbonLevel, tone: "energy" },
+                  { label: "Price", value: priceLevel, tone: "market" },
+                  { label: "Air", value: airLevel, tone: "air" },
+                  { label: "Fire", value: fireLevel, tone: "hazard" },
+                  { label: "Biology", value: speciesLevel, tone: "bio" },
+                ].map((signal) => (
+                  <div className="compare-signal-glyph" key={signal.label}>
+                    <span>{signal.label}</span>
+                    <div className="compare-signal-glyph-track">
+                      <div
+                        className={`compare-signal-glyph-fill compare-signal-glyph-fill-${signal.tone}`}
+                        style={{ height: `${Math.max(signal.value * 100, 8)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
               <div className="compare-bars">
                 {[
                   { label: "Carbon", value: carbonLevel, tone: "energy" },
+                  { label: "Price", value: priceLevel, tone: "market" },
                   { label: "Air", value: airLevel, tone: "air" },
                   { label: "Fire", value: fireLevel, tone: "hazard" },
                   { label: "Biology", value: speciesLevel, tone: "bio" },
@@ -677,6 +865,38 @@ export default function App() {
     };
   }, [coordinatePresets]);
 
+  useEffect(() => {
+    const revealNodes = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-reveal]"),
+    );
+
+    if (revealNodes.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.16,
+        rootMargin: "0px 0px -8% 0px",
+      },
+    );
+
+    revealNodes.forEach((node, index) => {
+      node.style.setProperty("--reveal-delay", `${index * 70}ms`);
+      observer.observe(node);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const liveSourceNotes = healthState.data?.providers ?? [];
   const liveSnapshot = environmentState.data?.electricityMaps;
   const livePriceSnapshot = environmentState.data?.priceDayAhead;
@@ -686,6 +906,97 @@ export default function App() {
   const geohazardsSnapshot = environmentState.data?.geohazards.snapshot;
   const wildfireSnapshot = environmentState.data?.wildfire.snapshot;
   const biodiversitySnapshot = environmentState.data?.biology.snapshot;
+  const bannerTimestamp =
+    liveSnapshot?.updatedAt ?? livePriceSnapshot?.updatedAt ?? weatherSnapshot?.time;
+  const heroSignals = [
+    {
+      label: "Grid zone",
+      value: liveSnapshot?.zone ?? "Awaiting live read",
+      detail: "Current electricity market context",
+    },
+    {
+      label: "Carbon intensity",
+      value: formatMetricValue(liveSnapshot?.carbonIntensityGCO2eqPerKWh, "gCO2eq/kWh"),
+      detail: "Latest carbon signal at the selected coordinates",
+    },
+    {
+      label: "Atmosphere",
+      value: earthSnapshot?.usAqi !== undefined ? `AQI ${earthSnapshot.usAqi}` : "Unavailable",
+      detail: "Air quality read aligned to the same region",
+    },
+  ];
+  const platformPills = [
+    "API-first",
+    "Structured JSON",
+    "Agent-ready context",
+  ];
+  const observatoryTelemetry = useMemo<HeroTelemetryPoint[]>(() => {
+    const baseSignals = [
+      {
+        label: "Carbon",
+        value: formatMetricValue(liveSnapshot?.carbonIntensityGCO2eqPerKWh, "gCO2eq/kWh"),
+        detail: "Grid emissions load",
+        intensity: normalizeSignal(liveSnapshot?.carbonIntensityGCO2eqPerKWh, 600),
+      },
+      {
+        label: "Price",
+        value: formatMetricValue(livePriceSnapshot?.price, livePriceSnapshot?.unit),
+        detail: "Market stress signal",
+        intensity: normalizeSignal(livePriceSnapshot?.price, 300),
+      },
+      {
+        label: "Air",
+        value: earthSnapshot?.usAqi !== undefined ? `AQI ${earthSnapshot.usAqi}` : "Unavailable",
+        detail: "Atmospheric condition",
+        intensity: normalizeSignal(earthSnapshot?.usAqi, 150),
+      },
+      {
+        label: "Hazard",
+        value:
+          wildfireSnapshot?.activeEventCount !== undefined
+            ? `${wildfireSnapshot.activeEventCount} events`
+            : "Unavailable",
+        detail: "Wildfire pressure",
+        intensity: normalizeSignal(wildfireSnapshot?.activeEventCount, 12),
+      },
+      {
+        label: "Biology",
+        value:
+          biodiversitySnapshot?.distinctSpeciesCount !== undefined
+            ? `${biodiversitySnapshot.distinctSpeciesCount} species`
+            : "Unavailable",
+        detail: "Ecology density",
+        intensity: normalizeSignal(biodiversitySnapshot?.distinctSpeciesCount, 100),
+      },
+      {
+        label: "Climate",
+        value:
+          climateSnapshot?.solarRadiationKwhPerM2 !== undefined
+            ? `${climateSnapshot.solarRadiationKwhPerM2} kWh/m2`
+            : "Unavailable",
+        detail: "Solar field energy",
+        intensity: normalizeSignal(climateSnapshot?.solarRadiationKwhPerM2, 8),
+      },
+    ];
+
+    return baseSignals.map((signal, index) => {
+      const regionOffset = (selectedLabel.length * 7 + index * 11) % 18;
+      return {
+        ...signal,
+        x: 14 + index * 14 + regionOffset * 0.35,
+        y: 18 + ((index * 23 + regionOffset) % 54),
+      };
+    });
+  }, [
+    biodiversitySnapshot?.distinctSpeciesCount,
+    climateSnapshot?.solarRadiationKwhPerM2,
+    earthSnapshot?.usAqi,
+    livePriceSnapshot?.price,
+    livePriceSnapshot?.unit,
+    liveSnapshot?.carbonIntensityGCO2eqPerKWh,
+    selectedLabel,
+    wildfireSnapshot?.activeEventCount,
+  ]);
   const stateHighlights = [
     {
       label: "Grid Carbon",
@@ -741,25 +1052,58 @@ export default function App() {
         } as CSSProperties
       }
     >
-      <Banner />
+      <Banner
+        region={selectedLabel}
+        providerCount={healthState.data?.providers.length}
+        lastSync={formatTimestamp(bannerTimestamp)}
+      />
       <header className="topbar">
         <a className="brand-lockup" href="#top" aria-label={`${productName} home`}>
           <img className="brand-image" src={ecosistLogo} alt={`${productName} logo`} />
+          <div className="brand-copy">
+            <span className="brand-kicker">Aliasist Data AI API</span>
+            <span className="brand-title">{productName}</span>
+          </div>
         </a>
-        <nav className="topnav" aria-label="Primary">
-          {nav.map((item) => (
-            <a key={item.href} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
+        <div className="topbar-actions">
+          <div className="topbar-readout">
+            <span className="topbar-readout-label">Live region</span>
+            <strong>{selectedLabel}</strong>
+          </div>
+          <nav className="topnav" aria-label="Primary">
+            {nav.map((item) => (
+              <a key={item.href} href={item.href}>
+                {item.label}
+              </a>
+            ))}
+            {hasClerkKey ? (
+              <>
+                <Show when="signed-in">
+                  <UserButton />
+                </Show>
+                <Show when="signed-out">
+                  <a className="auth-link" href="https://auth.aliasist.com/sign-in">
+                    Sign in
+                  </a>
+                </Show>
+              </>
+            ) : null}
+          </nav>
+        </div>
       </header>
 
-      <section className="hero">
-        <div className="hero-copy">
-          <p className="eyebrow">{productName}</p>
+      <section className="hero reveal-block reveal-hero" data-reveal="hero">
+        <div className="hero-copy reveal-child" data-reveal-child="0">
+          <p className="eyebrow">API-first environmental data</p>
           <h1>{tagline}</h1>
           <p className="lede">{description}</p>
+          <div className="platform-pill-row" aria-label="Platform capabilities">
+            {platformPills.map((pill) => (
+              <span className="platform-pill" key={pill}>
+                {pill}
+              </span>
+            ))}
+          </div>
           <div className="hero-actions">
             {heroActions.map((action) => (
               <a
@@ -771,8 +1115,53 @@ export default function App() {
               </a>
             ))}
           </div>
+          <div className="hero-signal-board" aria-label="Hero live summary">
+            {heroSignals.map((signal) => (
+              <article className="hero-signal-card" key={signal.label}>
+                <p className="hero-signal-label">{signal.label}</p>
+                <strong className="hero-signal-value">{signal.value}</strong>
+                <span className="hero-signal-detail">{signal.detail}</span>
+              </article>
+            ))}
+          </div>
         </div>
-        <div className="hero-panel">
+        <div className="hero-panel panel reveal-child" data-reveal-child="1">
+          <div className="hero-panel-header">
+            <div>
+              <p className="eyebrow">Operational API surface</p>
+              <h2>{heroPanel.title}</h2>
+            </div>
+            <p className="hero-panel-note">
+              One interface for live electricity, atmospheric, hazard, and biodiversity data across products and agents.
+            </p>
+          </div>
+          <div className="hero-mobile-showcase" aria-label="Mobile cinematic observatory slides">
+            {[
+              {
+                title: "Environmental Observatory",
+                caption: "A calmer mobile entry into live energy, weather, and water intelligence.",
+                image: ecosistCinematicHero,
+              },
+              {
+                title: "Signal Surface",
+                caption: "The visual layer for understanding active environment and biology signals.",
+                image: ecosistSignalPortrait,
+              },
+              {
+                title: "Operational Dashboard",
+                caption: "Core system readouts kept visible without flooding the first screen.",
+                image: ecosistDashboardVisual,
+              },
+            ].map((slide) => (
+              <figure className="hero-mobile-card" key={slide.title}>
+                <img className="hero-mobile-visual" src={slide.image} alt={slide.title} />
+                <figcaption className="hero-mobile-caption">
+                  <strong>{slide.title}</strong>
+                  <span>{slide.caption}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
           <div className="hero-media-grid">
             <figure className="hero-media hero-media-primary">
               <img
@@ -795,16 +1184,20 @@ export default function App() {
               </figcaption>
             </figure>
           </div>
-          <h2>{heroPanel.title}</h2>
-          <ul>
-            {heroPanel.bullets.map((bullet) => (
-              <li key={bullet}>{bullet}</li>
-            ))}
-          </ul>
+            <ul className="hero-panel-list">
+              {heroPanel.bullets.map((bullet) => (
+                <li key={bullet}>{bullet}</li>
+              ))}
+            </ul>
+            <HeroObservatory
+              region={selectedLabel}
+              lastSync={formatTimestamp(bannerTimestamp)}
+              telemetry={observatoryTelemetry}
+            />
         </div>
       </section>
 
-      <section className="state-ribbon" aria-label="Earth state">
+      <section className="state-ribbon reveal-block" data-reveal="glow" aria-label="Live signal state">
         {stateHighlights.map((item) => (
           <article className={`state-pill state-pill-${item.tone}`} key={item.label}>
             <p className="state-pill-label">{item.label}</p>
@@ -813,13 +1206,13 @@ export default function App() {
         ))}
       </section>
 
-      <section className="section" id={operationsSection.id}>
+      <section className="section reveal-block" data-reveal="rise" id={operationsSection.id}>
         <SectionHeader section={operationsSection} />
         <div className="operations-grid">
           <article className="panel operations-card">
             <h3>Provider status</h3>
             <p className="section-description">
-              Worker health, secret readiness, and provider availability are read directly from the API.
+              Worker health, secret readiness, and provider availability are exposed directly through the API.
             </p>
             {healthState.data && !healthState.data.electricityMapsConfigured ? (
               <p className="warning-text">
@@ -849,7 +1242,7 @@ export default function App() {
           <article className="panel operations-card">
             <h3>Environment snapshot</h3>
             <p className="section-description">
-              Change the target coordinates to compare different regions without changing code.
+              Change the target coordinates to compare regions without touching the product code.
             </p>
             <div className="preset-list">
               {coordinatePresets.map((preset) => (
@@ -877,7 +1270,7 @@ export default function App() {
             <p className="selected-label">Selected region: {selectedLabel}</p>
             <div className="signal-band">
               <div className="signal-band-copy">
-                <p className="eyebrow">Current Read</p>
+                <p className="eyebrow">Current API read</p>
                 <h3>{selectedLabel}</h3>
                 <p className="section-description">
                   Unified live read across energy, atmosphere, hazard, and biodiversity layers.
@@ -1146,7 +1539,7 @@ export default function App() {
         loading={compareState.loading}
       />
 
-      <section className="section" id={metricsSection.id}>
+      <section className="section reveal-block" data-reveal="rise" id={metricsSection.id}>
         <SectionHeader section={metricsSection} />
         <div className="metric-grid">
           {metrics.map((metric) => (
@@ -1155,7 +1548,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="section" id={domainsSection.id}>
+      <section className="section reveal-block" data-reveal="rise" id={domainsSection.id}>
         <SectionHeader section={domainsSection} />
         <div className="domain-grid">
           {domains.map((domain) => (
@@ -1164,7 +1557,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="section" id={workflowSection.id}>
+      <section className="section reveal-block" data-reveal="rise" id={workflowSection.id}>
         <SectionHeader section={workflowSection} />
         <div className="workflow-grid">
           {workflow.map((step, index) => (
@@ -1173,7 +1566,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="section" id={capabilitiesSection.id}>
+      <section className="section reveal-block" data-reveal="rise" id={capabilitiesSection.id}>
         <SectionHeader section={capabilitiesSection} />
         <div className="capability-grid">
           {capabilities.map((item) => (
@@ -1182,7 +1575,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="section" id={sourcesSection.id}>
+      <section className="section reveal-block" data-reveal="rise" id={sourcesSection.id}>
         <SectionHeader section={sourcesSection} />
         <div className="source-grid">
           {sources.map((source) => (

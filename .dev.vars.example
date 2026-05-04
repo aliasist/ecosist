@@ -1,1 +1,5 @@
+# EcoSist — local Cloudflare / Vite env (copy to `.dev.vars` or `.env.local` as your flow requires).
+# Clerk: same Clerk application as aliasist.com (publishable key only on the client).
+#
 ELECTRICITY_MAPS_API_KEY=replace-with-your-electricity-maps-api-key
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here

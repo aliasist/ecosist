@@ -1,3 +1,22 @@
+export type {
+  ProviderHealth,
+  SourceDescriptor,
+  ElectricitySnapshot,
+  DayAheadPriceSnapshot,
+  EarthSystemsSnapshot,
+  WeatherSnapshot,
+  ClimateSnapshot,
+  GeohazardSnapshot,
+  BiodiversitySnapshot,
+  WildfireSnapshot,
+  EnvironmentSnapshot,
+} from "../shared/types";
+
+// Aliases used by existing client code
+import type { SourceDescriptor, EnvironmentSnapshot } from "../shared/types";
+export type ProviderDescriptor = SourceDescriptor;
+export type EnvironmentSnapshotResponse = EnvironmentSnapshot;
+
 export type Trend = "up" | "down" | "steady";
 
 export type NavItem = {
@@ -50,128 +69,11 @@ export type SourceNote = {
   detail: string;
 };
 
-export type ProviderDescriptor = {
-  id: string;
-  name: string;
-  category: "energy" | "earth" | "biology";
-  health: "available" | "configured" | "unconfigured" | "planned";
-  live: boolean;
-  citationUrl: string;
-  notes: string[];
-};
-
 export type HealthResponse = {
   status: string;
   app: string;
   providers: ProviderDescriptor[];
   electricityMapsConfigured: boolean;
-};
-
-export type EnvironmentSnapshotResponse = {
-  requested: {
-    lat: number;
-    lng: number;
-  };
-  electricityMaps?: {
-    zone: string;
-    datetime: string;
-    updatedAt: string;
-    carbonIntensityGCO2eqPerKWh?: number;
-    renewablePercentage?: number;
-    carbonFreePercentage?: number;
-    emissionFactorType?: string;
-    isEstimated?: boolean;
-    estimationMethod?: string;
-  };
-  priceDayAhead?: {
-    zone: string;
-    datetime: string;
-    updatedAt?: string;
-    price?: number;
-    currency?: string;
-    unit?: string;
-    source?: string;
-  };
-  weather?: {
-    source: string;
-    latitude: number;
-    longitude: number;
-    time?: string;
-    temperatureC?: number;
-    apparentTemperatureC?: number;
-    precipitationMm?: number;
-    windSpeedKph?: number;
-    windDirectionDeg?: number;
-  };
-  earthSystems: {
-    status: "available" | "configured" | "unconfigured" | "planned";
-    plannedFeeds: string[];
-    snapshot?: {
-      source: string;
-      latitude: number;
-      longitude: number;
-      hourlyTime?: string;
-      usAqi?: number;
-      pm10?: number;
-      pm2_5?: number;
-      carbonMonoxide?: number;
-      nitrogenDioxide?: number;
-      ozone?: number;
-      aerosolOpticalDepth?: number;
-    };
-  };
-  climate: {
-    status: "available" | "configured" | "unconfigured" | "planned";
-    plannedFeeds: string[];
-    snapshot?: {
-      source: string;
-      date?: string;
-      temperatureC?: number;
-      precipitationMm?: number;
-      solarRadiationKwhPerM2?: number;
-    };
-  };
-  geohazards: {
-    status: "available" | "configured" | "unconfigured" | "planned";
-    plannedFeeds: string[];
-    snapshot?: {
-      source: string;
-      countPast30Days: number;
-      latestEventTime?: string;
-      latestMagnitude?: number;
-      latestPlace?: string;
-      latestDepthKm?: number;
-      latestTsunamiAlert?: number;
-    };
-  };
-  wildfire: {
-    status: "available" | "configured" | "unconfigured" | "planned";
-    plannedFeeds: string[];
-    snapshot?: {
-      source: string;
-      activeEventCount: number;
-      latestEventTitle?: string;
-      latestEventDate?: string;
-      latestSource?: string;
-    };
-  };
-  biology: {
-    status: "available" | "configured" | "unconfigured" | "planned";
-    plannedFeeds: string[];
-    snapshot?: {
-      source: string;
-      searchWindowStart?: string;
-      occurrenceCount: number;
-      distinctSpeciesCount: number;
-      basisOfRecordBreakdown: Array<{
-        basisOfRecord: string;
-        count: number;
-      }>;
-      featuredSpecies: string[];
-    };
-  };
-  sources: ProviderDescriptor[];
-  warning?: string;
 };
 
 export type ThemeConfig = {
